@@ -32,7 +32,7 @@ from pydantic import field_validator
 from acp.schema import AgentCapabilities, Implementation, McpCapabilities
 
 from mini_agent.agent import Agent
-from mini_agent.cli import add_workspace_tools, initialize_base_tools
+from mini_agent.cli import add_workspace_tools, initialize_base_tools, set_quiet_mode
 from mini_agent.config import Config
 from mini_agent.llm import LLMClient
 from mini_agent.retry import RetryConfig as RetryConfigBase
@@ -171,8 +171,9 @@ class MiniMaxACPAgent:
 async def run_acp_server(config: Config | None = None) -> None:
     """Run Mini-Agent as an ACP-compatible stdio server."""
     config = config or Config.load()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-    base_tools, skill_loader = await initialize_base_tools(config)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s", handlers=[logging.StreamHandler()])
+    set_quiet_mode(True)
+    base_tools, skill_loader = await initialize_base_tools(config, quiet=True)
     prompt_path = Config.find_config_file(config.agent.system_prompt_path)
     if prompt_path and prompt_path.exists():
         system_prompt = prompt_path.read_text(encoding="utf-8")

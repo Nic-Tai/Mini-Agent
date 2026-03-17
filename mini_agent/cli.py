@@ -40,6 +40,23 @@ from mini_agent.tools.skill_tool import create_skill_tools
 from mini_agent.utils import calculate_display_width
 
 
+_quiet_mode = False
+
+
+def set_quiet_mode(quiet: bool = True) -> None:
+    """Enable or disable quiet mode (suppresses stdout output)"""
+    global _quiet_mode
+    _quiet_mode = quiet
+
+
+def _safe_print(*args, **kwargs) -> None:
+    """Print to stderr when in quiet mode, otherwise stdout"""
+    import sys
+    if _quiet_mode:
+        return  # Suppress all output in quiet mode
+    print(*args, **kwargs)
+
+
 # ANSI color codes
 class Colors:
     """Terminal color definitions"""
@@ -88,7 +105,7 @@ def show_log_directory(open_file_manager: bool = True) -> None:
     """
     log_dir = get_log_directory()
 
-    print(f"\n{Colors.BRIGHT_CYAN}📁 Log Directory: {log_dir}{Colors.RESET}")
+    print(f"\n{Colors.BRIGHT_CYAN} Log Directory: {log_dir}{Colors.RESET}")
 
     if not log_dir.exists() or not log_dir.is_dir():
         print(f"{Colors.RED}Log directory does not exist: {log_dir}{Colors.RESET}\n")
@@ -335,7 +352,7 @@ Examples:
     return parser.parse_args()
 
 
-async def initialize_base_tools(config: Config):
+async def initialize_base_tools(config: Config, quiet: bool = False):
     """Initialize base tools (independent of workspace)
 
     These tools are loaded from package configuration and don't depend on workspace.
@@ -343,10 +360,13 @@ async def initialize_base_tools(config: Config):
 
     Args:
         config: Configuration object
+        quiet: If True, suppress output (for ACP server mode)
 
     Returns:
         Tuple of (list of tools, skill loader if skills enabled)
     """
+    global _quiet_mode
+    _quiet_mode = quiet
 
     tools = []
     skill_loader = None
@@ -356,15 +376,15 @@ async def initialize_base_tools(config: Config):
     if config.tools.enable_bash:
         bash_output_tool = BashOutputTool()
         tools.append(bash_output_tool)
-        print(f"{Colors.GREEN} Loaded Bash Output tool{Colors.RESET}")
+        _safe_print(f"{Colors.GREEN} Loaded Bash Output tool{Colors.RESET}")
 
         bash_kill_tool = BashKillTool()
         tools.append(bash_kill_tool)
-        print(f"{Colors.GREEN} Loaded Bash Kill tool{Colors.RESET}")
+        _safe_print(f"{Colors.GREEN} Loaded Bash Kill tool{Colors.RESET}")
 
     # 3. Claude Skills (loaded from package directory)
     if config.tools.enable_skills:
-        print(f"{Colors.BRIGHT_CYAN}Loading Claude Skills...{Colors.RESET}")
+        _safe_print(f"{Colors.BRIGHT_CYAN}Loading Claude Skills...{Colors.RESET}")
         try:
             # Resolve skills directory with priority search
             # Expand ~ to user home directory for portability
@@ -391,15 +411,15 @@ async def initialize_base_tools(config: Config):
             skill_tools, skill_loader = create_skill_tools(skills_dir)
             if skill_tools:
                 tools.extend(skill_tools)
-                print(f"{Colors.GREEN} Loaded Skill tool (get_skill){Colors.RESET}")
+                _safe_print(f"{Colors.GREEN} Loaded Skill tool (get_skill){Colors.RESET}")
             else:
-                print(f"{Colors.YELLOW}  No available Skills found{Colors.RESET}")
+                _safe_print(f"{Colors.YELLOW}  No available Skills found{Colors.RESET}")
         except Exception as e:
-            print(f"{Colors.YELLOW}  Failed to load Skills: {e}{Colors.RESET}")
+            _safe_print(f"{Colors.YELLOW}  Failed to load Skills: {e}{Colors.RESET}")
 
     # 4. MCP tools (loaded with priority search)
     if config.tools.enable_mcp:
-        print(f"{Colors.BRIGHT_CYAN}Loading MCP tools...{Colors.RESET}")
+        _safe_print(f"{Colors.BRIGHT_CYAN}Loading MCP tools...{Colors.RESET}")
         try:
             # Apply MCP timeout configuration from config.yaml
             mcp_config = config.tools.mcp
@@ -408,7 +428,7 @@ async def initialize_base_tools(config: Config):
                 execute_timeout=mcp_config.execute_timeout,
                 sse_read_timeout=mcp_config.sse_read_timeout,
             )
-            print(
+            _safe_print(
                 f"{Colors.DIM}  MCP timeouts: connect={mcp_config.connect_timeout}s, "
                 f"execute={mcp_config.execute_timeout}s, sse_read={mcp_config.sse_read_timeout}s{Colors.RESET}"
             )
@@ -419,15 +439,15 @@ async def initialize_base_tools(config: Config):
                 mcp_tools = await load_mcp_tools_async(str(mcp_config_path))
                 if mcp_tools:
                     tools.extend(mcp_tools)
-                    print(f"{Colors.GREEN}  Loaded {len(mcp_tools)} MCP tools (from: {mcp_config_path}){Colors.RESET}")
+                    _safe_print(f"{Colors.GREEN}  Loaded {len(mcp_tools)} MCP tools (from: {mcp_config_path}){Colors.RESET}")
                 else:
-                    print(f"{Colors.YELLOW}  No available MCP tools found{Colors.RESET}")
+                    _safe_print(f"{Colors.YELLOW}  No available MCP tools found{Colors.RESET}")
             else:
-                print(f"{Colors.YELLOW}  MCP config file not found: {config.tools.mcp_config_path}{Colors.RESET}")
+                _safe_print(f"{Colors.YELLOW}  MCP config file not found: {config.tools.mcp_config_path}{Colors.RESET}")
         except Exception as e:
-            print(f"{Colors.YELLOW}  Failed to load MCP tools: {e}{Colors.RESET}")
+            _safe_print(f"{Colors.YELLOW}  Failed to load MCP tools: {e}{Colors.RESET}")
 
-    print()  # Empty line separator
+    _safe_print()  # Empty line separator
     return tools, skill_loader
 
 
@@ -448,7 +468,7 @@ def add_workspace_tools(tools: List[Tool], config: Config, workspace_dir: Path):
     if config.tools.enable_bash:
         bash_tool = BashTool(workspace_dir=str(workspace_dir))
         tools.append(bash_tool)
-        print(f"{Colors.GREEN} Loaded Bash tool (cwd: {workspace_dir}){Colors.RESET}")
+        _safe_print(f"{Colors.GREEN} Loaded Bash tool (cwd: {workspace_dir}){Colors.RESET}")
 
     # File tools - need workspace to resolve relative paths
     if config.tools.enable_file_tools:
@@ -459,12 +479,12 @@ def add_workspace_tools(tools: List[Tool], config: Config, workspace_dir: Path):
                 EditTool(workspace_dir=str(workspace_dir)),
             ]
         )
-        print(f"{Colors.GREEN}  Loaded file operation tools (workspace: {workspace_dir}){Colors.RESET}")
+        _safe_print(f"{Colors.GREEN}  Loaded file operation tools (workspace: {workspace_dir}){Colors.RESET}")
 
     # Session note tool - needs workspace to store memory file
     if config.tools.enable_note:
         tools.append(SessionNoteTool(memory_file=str(workspace_dir / ".agent_memory.json")))
-        print(f"{Colors.GREEN}  Loaded session note tool{Colors.RESET}")
+        _safe_print(f"{Colors.GREEN}  Loaded session note tool{Colors.RESET}")
 
 
 async def _quiet_cleanup():
@@ -498,12 +518,12 @@ async def run_agent(workspace_dir: Path, task: str = None):
     if not config_path.exists():
         print(f"{Colors.RED} Configuration file not found{Colors.RESET}")
         print()
-        print(f"{Colors.BRIGHT_CYAN}📦 Configuration Search Path:{Colors.RESET}")
+        print(f"{Colors.BRIGHT_CYAN} Configuration Search Path:{Colors.RESET}")
         print(f"  {Colors.DIM}1) mini_agent/config/config.yaml{Colors.RESET} (development)")
         print(f"  {Colors.DIM}2) ~/.mini-agent/config/config.yaml{Colors.RESET} (user)")
         print(f"  {Colors.DIM}3) <package>/config/config.yaml{Colors.RESET} (installed)")
         print()
-        print(f"{Colors.BRIGHT_YELLOW}🚀 Quick Setup (Recommended):{Colors.RESET}")
+        print(f"{Colors.BRIGHT_YELLOW} Quick Setup (Recommended):{Colors.RESET}")
         print(
             f"  {Colors.BRIGHT_GREEN}curl -fsSL https://raw.githubusercontent.com/MiniMax-AI/Mini-Agent/main/scripts/setup-config.sh | bash{Colors.RESET}"
         )
@@ -513,7 +533,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
         print(f"{Colors.DIM}    • Download configuration files{Colors.RESET}")
         print(f"{Colors.DIM}    • Guide you to add your API Key{Colors.RESET}")
         print()
-        print(f"{Colors.BRIGHT_YELLOW}📝 Manual Setup:{Colors.RESET}")
+        print(f"{Colors.BRIGHT_YELLOW} Manual Setup:{Colors.RESET}")
         user_config_dir = Path.home() / ".mini-agent" / "config"
         example_config = Config.get_package_dir() / "config" / "config-example.yaml"
         print(f"  {Colors.DIM}mkdir -p {user_config_dir}{Colors.RESET}")
@@ -697,7 +717,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
                 command = user_input.lower()
 
                 if command in ["/exit", "/quit", "/q"]:
-                    print(f"\n{Colors.BRIGHT_YELLOW}👋 Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
+                    print(f"\n{Colors.BRIGHT_YELLOW} Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
                     print_stats(agent, session_start)
                     break
 
@@ -739,7 +759,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
 
             # Normal conversation - exit check
             if user_input.lower() in ["exit", "quit", "q"]:
-                print(f"\n{Colors.BRIGHT_YELLOW}👋 Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
+                print(f"\n{Colors.BRIGHT_YELLOW} Goodbye! Thanks for using Mini Agent{Colors.RESET}\n")
                 print_stats(agent, session_start)
                 break
 
@@ -767,7 +787,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
                             if msvcrt.kbhit():
                                 char = msvcrt.getch()
                                 if char == b"\x1b":  # Esc
-                                    print(f"\n{Colors.BRIGHT_YELLOW}⏹️  Esc pressed, cancelling...{Colors.RESET}")
+                                    print(f"\n{Colors.BRIGHT_YELLOW}  Esc pressed, cancelling...{Colors.RESET}")
                                     esc_cancelled[0] = True
                                     cancel_event.set()
                                     break
@@ -792,7 +812,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
                             if rlist:
                                 char = sys.stdin.read(1)
                                 if char == "\x1b":  # Esc
-                                    print(f"\n{Colors.BRIGHT_YELLOW}⏹️  Esc pressed, cancelling...{Colors.RESET}")
+                                    print(f"\n{Colors.BRIGHT_YELLOW}  Esc pressed, cancelling...{Colors.RESET}")
                                     esc_cancelled[0] = True
                                     cancel_event.set()
                                     break
@@ -829,7 +849,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
             print(f"\n{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
 
         except KeyboardInterrupt:
-            print(f"\n\n{Colors.BRIGHT_YELLOW}👋 Interrupt signal detected, exiting...{Colors.RESET}\n")
+            print(f"\n\n{Colors.BRIGHT_YELLOW} Interrupt signal detected, exiting...{Colors.RESET}\n")
             print_stats(agent, session_start)
             break
 
