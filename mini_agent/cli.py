@@ -152,10 +152,10 @@ def read_log_file(filename: str) -> None:
     log_file = log_dir / filename
 
     if not log_file.exists() or not log_file.is_file():
-        print(f"\n{Colors.RED}❌ Log file not found: {log_file}{Colors.RESET}\n")
+        print(f"\n{Colors.RED} Log file not found: {log_file}{Colors.RESET}\n")
         return
 
-    print(f"\n{Colors.BRIGHT_CYAN}📄 Reading: {log_file}{Colors.RESET}")
+    print(f"\n{Colors.BRIGHT_CYAN} Reading: {log_file}{Colors.RESET}")
     print(f"{Colors.DIM}{'─' * 80}{Colors.RESET}")
 
     try:
@@ -163,9 +163,9 @@ def read_log_file(filename: str) -> None:
             content = f.read()
         print(content)
         print(f"{Colors.DIM}{'─' * 80}{Colors.RESET}")
-        print(f"\n{Colors.GREEN}✅ End of file{Colors.RESET}\n")
+        print(f"\n{Colors.GREEN}  End of file{Colors.RESET}\n")
     except Exception as e:
-        print(f"\n{Colors.RED}❌ Error reading file: {e}{Colors.RESET}\n")
+        print(f"\n{Colors.RED} Error reading file: {e}{Colors.RESET}\n")
 
 
 def print_banner():
@@ -356,11 +356,11 @@ async def initialize_base_tools(config: Config):
     if config.tools.enable_bash:
         bash_output_tool = BashOutputTool()
         tools.append(bash_output_tool)
-        print(f"{Colors.GREEN}✅ Loaded Bash Output tool{Colors.RESET}")
+        print(f"{Colors.GREEN} Loaded Bash Output tool{Colors.RESET}")
 
         bash_kill_tool = BashKillTool()
         tools.append(bash_kill_tool)
-        print(f"{Colors.GREEN}✅ Loaded Bash Kill tool{Colors.RESET}")
+        print(f"{Colors.GREEN} Loaded Bash Kill tool{Colors.RESET}")
 
     # 3. Claude Skills (loaded from package directory)
     if config.tools.enable_skills:
@@ -391,11 +391,11 @@ async def initialize_base_tools(config: Config):
             skill_tools, skill_loader = create_skill_tools(skills_dir)
             if skill_tools:
                 tools.extend(skill_tools)
-                print(f"{Colors.GREEN}✅ Loaded Skill tool (get_skill){Colors.RESET}")
+                print(f"{Colors.GREEN} Loaded Skill tool (get_skill){Colors.RESET}")
             else:
-                print(f"{Colors.YELLOW}⚠️  No available Skills found{Colors.RESET}")
+                print(f"{Colors.YELLOW}  No available Skills found{Colors.RESET}")
         except Exception as e:
-            print(f"{Colors.YELLOW}⚠️  Failed to load Skills: {e}{Colors.RESET}")
+            print(f"{Colors.YELLOW}  Failed to load Skills: {e}{Colors.RESET}")
 
     # 4. MCP tools (loaded with priority search)
     if config.tools.enable_mcp:
@@ -419,13 +419,13 @@ async def initialize_base_tools(config: Config):
                 mcp_tools = await load_mcp_tools_async(str(mcp_config_path))
                 if mcp_tools:
                     tools.extend(mcp_tools)
-                    print(f"{Colors.GREEN}✅ Loaded {len(mcp_tools)} MCP tools (from: {mcp_config_path}){Colors.RESET}")
+                    print(f"{Colors.GREEN}  Loaded {len(mcp_tools)} MCP tools (from: {mcp_config_path}){Colors.RESET}")
                 else:
-                    print(f"{Colors.YELLOW}⚠️  No available MCP tools found{Colors.RESET}")
+                    print(f"{Colors.YELLOW}  No available MCP tools found{Colors.RESET}")
             else:
-                print(f"{Colors.YELLOW}⚠️  MCP config file not found: {config.tools.mcp_config_path}{Colors.RESET}")
+                print(f"{Colors.YELLOW}  MCP config file not found: {config.tools.mcp_config_path}{Colors.RESET}")
         except Exception as e:
-            print(f"{Colors.YELLOW}⚠️  Failed to load MCP tools: {e}{Colors.RESET}")
+            print(f"{Colors.YELLOW}  Failed to load MCP tools: {e}{Colors.RESET}")
 
     print()  # Empty line separator
     return tools, skill_loader
@@ -448,7 +448,7 @@ def add_workspace_tools(tools: List[Tool], config: Config, workspace_dir: Path):
     if config.tools.enable_bash:
         bash_tool = BashTool(workspace_dir=str(workspace_dir))
         tools.append(bash_tool)
-        print(f"{Colors.GREEN}✅ Loaded Bash tool (cwd: {workspace_dir}){Colors.RESET}")
+        print(f"{Colors.GREEN} Loaded Bash tool (cwd: {workspace_dir}){Colors.RESET}")
 
     # File tools - need workspace to resolve relative paths
     if config.tools.enable_file_tools:
@@ -459,12 +459,12 @@ def add_workspace_tools(tools: List[Tool], config: Config, workspace_dir: Path):
                 EditTool(workspace_dir=str(workspace_dir)),
             ]
         )
-        print(f"{Colors.GREEN}✅ Loaded file operation tools (workspace: {workspace_dir}){Colors.RESET}")
+        print(f"{Colors.GREEN}  Loaded file operation tools (workspace: {workspace_dir}){Colors.RESET}")
 
     # Session note tool - needs workspace to store memory file
     if config.tools.enable_note:
         tools.append(SessionNoteTool(memory_file=str(workspace_dir / ".agent_memory.json")))
-        print(f"{Colors.GREEN}✅ Loaded session note tool{Colors.RESET}")
+        print(f"{Colors.GREEN}  Loaded session note tool{Colors.RESET}")
 
 
 async def _quiet_cleanup():
@@ -496,7 +496,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
     config_path = Config.get_default_config_path()
 
     if not config_path.exists():
-        print(f"{Colors.RED}❌ Configuration file not found{Colors.RESET}")
+        print(f"{Colors.RED} Configuration file not found{Colors.RESET}")
         print()
         print(f"{Colors.BRIGHT_CYAN}📦 Configuration Search Path:{Colors.RESET}")
         print(f"  {Colors.DIM}1) mini_agent/config/config.yaml{Colors.RESET} (development)")
@@ -525,14 +525,14 @@ async def run_agent(workspace_dir: Path, task: str = None):
     try:
         config = Config.from_yaml(config_path)
     except FileNotFoundError:
-        print(f"{Colors.RED}❌ Error: Configuration file not found: {config_path}{Colors.RESET}")
+        print(f"{Colors.RED} Error: Configuration file not found: {config_path}{Colors.RESET}")
         return
     except ValueError as e:
-        print(f"{Colors.RED}❌ Error: {e}{Colors.RESET}")
+        print(f"{Colors.RED} Error: {e}{Colors.RESET}")
         print(f"{Colors.YELLOW}Please check the configuration file format{Colors.RESET}")
         return
     except Exception as e:
-        print(f"{Colors.RED}❌ Error: Failed to load configuration file: {e}{Colors.RESET}")
+        print(f"{Colors.RED} Error: Failed to load configuration file: {e}{Colors.RESET}")
         return
 
     # 2. Initialize LLM client
@@ -551,7 +551,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
     # Create retry callback function to display retry information in terminal
     def on_retry(exception: Exception, attempt: int):
         """Retry callback function to display retry information"""
-        print(f"\n{Colors.BRIGHT_YELLOW}⚠️  LLM call failed (attempt {attempt}): {str(exception)}{Colors.RESET}")
+        print(f"\n{Colors.BRIGHT_YELLOW}  LLM call failed (attempt {attempt}): {str(exception)}{Colors.RESET}")
         next_delay = retry_config.calculate_delay(attempt - 1)
         print(f"{Colors.DIM}   Retrying in {next_delay:.1f}s (attempt {attempt + 1})...{Colors.RESET}")
 
@@ -569,7 +569,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
     # Set retry callback
     if config.llm.retry.enabled:
         llm_client.retry_callback = on_retry
-        print(f"{Colors.GREEN}✅ LLM retry mechanism enabled (max {config.llm.retry.max_retries} retries){Colors.RESET}")
+        print(f"{Colors.GREEN}  LLM retry mechanism enabled (max {config.llm.retry.max_retries} retries){Colors.RESET}")
 
     # 3. Initialize base tools (independent of workspace)
     tools, skill_loader = await initialize_base_tools(config)
@@ -581,10 +581,10 @@ async def run_agent(workspace_dir: Path, task: str = None):
     system_prompt_path = Config.find_config_file(config.agent.system_prompt_path)
     if system_prompt_path and system_prompt_path.exists():
         system_prompt = system_prompt_path.read_text(encoding="utf-8")
-        print(f"{Colors.GREEN}✅ Loaded system prompt (from: {system_prompt_path}){Colors.RESET}")
+        print(f"{Colors.GREEN}  Loaded system prompt (from: {system_prompt_path}){Colors.RESET}")
     else:
         system_prompt = "You are Mini-Agent, an intelligent assistant powered by MiniMax M2.5 that can help users complete various tasks."
-        print(f"{Colors.YELLOW}⚠️  System prompt not found, using default{Colors.RESET}")
+        print(f"{Colors.YELLOW}  System prompt not found, using default{Colors.RESET}")
 
     # 6. Inject Skills Metadata into System Prompt (Progressive Disclosure - Level 1)
     if skill_loader:
@@ -592,7 +592,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
         if skills_metadata:
             # Replace placeholder with actual metadata
             system_prompt = system_prompt.replace("{SKILLS_METADATA}", skills_metadata)
-            print(f"{Colors.GREEN}✅ Injected {len(skill_loader.loaded_skills)} skills metadata into system prompt{Colors.RESET}")
+            print(f"{Colors.GREEN}  Injected {len(skill_loader.loaded_skills)} skills metadata into system prompt{Colors.RESET}")
         else:
             # Remove placeholder if no skills
             system_prompt = system_prompt.replace("{SKILLS_METADATA}", "")
@@ -621,7 +621,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
         try:
             await agent.run()
         except Exception as e:
-            print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
+            print(f"\n{Colors.RED} Error: {e}{Colors.RESET}")
         finally:
             print_stats(agent, session_start)
 
@@ -709,7 +709,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
                     # Clear message history but keep system prompt
                     old_count = len(agent.messages)
                     agent.messages = [agent.messages[0]]  # Keep only system message
-                    print(f"{Colors.GREEN}✅ Cleared {old_count - 1} messages, starting new session{Colors.RESET}\n")
+                    print(f"{Colors.GREEN}  Cleared {old_count - 1} messages, starting new session{Colors.RESET}\n")
                     continue
 
                 elif command == "/history":
@@ -733,7 +733,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
                     continue
 
                 else:
-                    print(f"{Colors.RED}❌ Unknown command: {user_input}{Colors.RESET}")
+                    print(f"{Colors.RED} Unknown command: {user_input}{Colors.RESET}")
                     print(f"{Colors.DIM}Type /help to see available commands{Colors.RESET}\n")
                     continue
 
@@ -819,7 +819,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
                 _ = agent_task.result()
 
             except asyncio.CancelledError:
-                print(f"\n{Colors.BRIGHT_YELLOW}⚠️  Agent execution cancelled{Colors.RESET}")
+                print(f"\n{Colors.BRIGHT_YELLOW}  Agent execution cancelled{Colors.RESET}")
             finally:
                 agent.cancel_event = None
                 esc_listener_stop.set()
@@ -834,7 +834,7 @@ async def run_agent(workspace_dir: Path, task: str = None):
             break
 
         except Exception as e:
-            print(f"\n{Colors.RED}❌ Error: {e}{Colors.RESET}")
+            print(f"\n{Colors.RED} Error: {e}{Colors.RESET}")
             print(f"{Colors.DIM}{'─' * 60}{Colors.RESET}\n")
 
     # 11. Cleanup MCP connections
