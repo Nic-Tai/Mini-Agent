@@ -14,6 +14,13 @@ from mcp.client.streamable_http import streamablehttp_client
 
 from .base import Tool, ToolResult
 
+try:
+    from mini_agent.cli import _quiet_mode, _safe_print
+except ImportError:
+    _quiet_mode = False
+    def _safe_print(*args, **kwargs):
+        print(*args, **kwargs)
+
 # Connection type aliases
 ConnectionType = Literal["stdio", "sse", "http", "streamable_http"]
 
@@ -208,21 +215,21 @@ class MCPServerConnection:
                 self.tools.append(mcp_tool)
 
             conn_info = self.url if self.url else self.command
-            print(f"✓ Connected to MCP server '{self.name}' ({self.connection_type}: {conn_info}) - loaded {len(self.tools)} tools")
+            _safe_print(f"[OK] Connected to MCP server '{self.name}' ({self.connection_type}: {conn_info}) - loaded {len(self.tools)} tools")
             for tool in self.tools:
                 desc = tool.description[:60] if len(tool.description) > 60 else tool.description
-                print(f"  - {tool.name}: {desc}...")
+                _safe_print(f"  - {tool.name}: {desc}...")
             return True
 
         except TimeoutError:
-            print(f"✗ Connection to MCP server '{self.name}' timed out after {connect_timeout}s")
+            _safe_print(f"[ERROR] Connection to MCP server '{self.name}' timed out after {connect_timeout}s")
             if self.exit_stack:
                 await self.exit_stack.aclose()
                 self.exit_stack = None
             return False
 
         except Exception as e:
-            print(f"✗ Failed to connect to MCP server '{self.name}': {e}")
+            _safe_print(f"[ERROR] Failed to connect to MCP server '{self.name}': {e}")
             if self.exit_stack:
                 await self.exit_stack.aclose()
                 self.exit_stack = None
@@ -321,7 +328,7 @@ def _resolve_mcp_config_path(config_path: str) -> Path | None:
     if config_file.name == "mcp.json":
         example_file = config_file.parent / "mcp-example.json"
         if example_file.exists():
-            print(f"mcp.json not found, using template: {example_file}")
+            _safe_print(f"[INFO] mcp.json not found, using template: {example_file}")
             return example_file
 
     return None
@@ -361,7 +368,7 @@ async def load_mcp_tools_async(config_path: str = "mcp.json") -> list[Tool]:
     config_file = _resolve_mcp_config_path(config_path)
 
     if config_file is None:
-        print(f"MCP config not found: {config_path}")
+        _safe_print(f"[WARNING] MCP config not found: {config_path}")
         return []
 
     try:
@@ -371,7 +378,7 @@ async def load_mcp_tools_async(config_path: str = "mcp.json") -> list[Tool]:
         mcp_servers = config.get("mcpServers", {})
 
         if not mcp_servers:
-            print("No MCP servers configured")
+            _safe_print("[INFO] No MCP servers configured")
             return []
 
         all_tools = []
@@ -379,7 +386,7 @@ async def load_mcp_tools_async(config_path: str = "mcp.json") -> list[Tool]:
         # Connect to each enabled server
         for server_name, server_config in mcp_servers.items():
             if server_config.get("disabled", False):
-                print(f"Skipping disabled server: {server_name}")
+                _safe_print(f"[INFO] Skipping disabled server: {server_name}")
                 continue
 
             conn_type = _determine_connection_type(server_config)
@@ -388,10 +395,10 @@ async def load_mcp_tools_async(config_path: str = "mcp.json") -> list[Tool]:
 
             # Validate config
             if conn_type == "stdio" and not command:
-                print(f"No command specified for STDIO server: {server_name}")
+                _safe_print(f"[WARNING] No command specified for STDIO server: {server_name}")
                 continue
             if conn_type in ("sse", "http", "streamable_http") and not url:
-                print(f"No url specified for {conn_type.upper()} server: {server_name}")
+                _safe_print(f"[WARNING] No url specified for {conn_type.upper()} server: {server_name}")
                 continue
 
             connection = MCPServerConnection(
@@ -413,12 +420,12 @@ async def load_mcp_tools_async(config_path: str = "mcp.json") -> list[Tool]:
                 _mcp_connections.append(connection)
                 all_tools.extend(connection.tools)
 
-        print(f"\nTotal MCP tools loaded: {len(all_tools)}")
+        _safe_print(f"\n[INFO] Total MCP tools loaded: {len(all_tools)}")
 
         return all_tools
 
     except Exception as e:
-        print(f"Error loading MCP config: {e}")
+        _safe_print(f"[ERROR] Error loading MCP config: {e}")
         import traceback
 
         traceback.print_exc()

@@ -201,7 +201,7 @@ class SkillLoader:
         skills = []
 
         if not self.skills_dir.exists():
-            print(f"⚠️  Skills directory does not exist: {self.skills_dir}")
+            print(f"[WARNING] Skills directory does not exist: {self.skills_dir}")
             return skills
 
         # Recursively find all SKILL.md files

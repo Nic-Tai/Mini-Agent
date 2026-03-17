@@ -147,7 +147,7 @@ class MiniMaxACPAgent:
                 name, args = call.function.name, call.function.arguments
                 # Show tool name with key arguments for better visibility
                 args_preview = ", ".join(f"{k}={repr(v)[:50]}" for k, v in list(args.items())[:2]) if isinstance(args, dict) else ""
-                label = f"🔧 {name}({args_preview})" if args_preview else f"🔧 {name}()"
+                label = f"[TOOL] {name}({args_preview})" if args_preview else f"[TOOL] {name}()"
                 await self._send(session_id, start_tool_call(call.id, label, kind="execute", raw_input=args))
                 tool = agent.tools.get(name)
                 if not tool:

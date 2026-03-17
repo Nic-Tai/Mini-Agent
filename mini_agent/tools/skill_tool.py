@@ -9,6 +9,13 @@ from typing import Any, Dict, List, Optional
 from .base import Tool, ToolResult
 from .skill_loader import SkillLoader
 
+try:
+    from mini_agent.cli import _quiet_mode, _safe_print
+except ImportError:
+    _quiet_mode = False
+    def _safe_print(*args, **kwargs):
+        print(*args, **kwargs)
+
 
 class GetSkillTool(Tool):
     """Tool to get detailed information about a specific skill"""
@@ -74,7 +81,7 @@ def create_skill_tools(
 
     # Discover and load skills
     skills = loader.discover_skills()
-    print(f"✅ Discovered {len(skills)} Claude Skills")
+    _safe_print(f"[INFO] Discovered {len(skills)} Claude Skills")
 
     # Create only the get_skill tool (Progressive Disclosure Level 2)
     tools = [
