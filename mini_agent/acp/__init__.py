@@ -33,6 +33,7 @@ from acp.schema import AgentCapabilities, Implementation, McpCapabilities
 
 from mini_agent.agent import Agent
 from mini_agent.cli import add_workspace_tools, initialize_base_tools, set_quiet_mode
+from mini_agent import agent as agent_module
 from mini_agent.config import Config
 from mini_agent.llm import LLMClient
 from mini_agent.retry import RetryConfig as RetryConfigBase
@@ -173,6 +174,7 @@ async def run_acp_server(config: Config | None = None) -> None:
     config = config or Config.load()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s", handlers=[logging.StreamHandler()])
     set_quiet_mode(True)
+    agent_module._quiet_mode = True
     base_tools, skill_loader = await initialize_base_tools(config, quiet=True)
     prompt_path = Config.find_config_file(config.agent.system_prompt_path)
     if prompt_path and prompt_path.exists():

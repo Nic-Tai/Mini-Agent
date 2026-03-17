@@ -8,12 +8,22 @@ from typing import Optional
 
 import tiktoken
 
-from .cli import _quiet_mode, _safe_print
 from .llm import LLMClient
 from .logger import AgentLogger
 from .schema import Message
 from .tools.base import Tool, ToolResult
 from .utils import calculate_display_width
+
+
+_quiet_mode = False
+
+
+def _safe_print(*args, **kwargs) -> None:
+    """Print to stderr when in quiet mode, otherwise stdout"""
+    import sys
+    if _quiet_mode:
+        return  # Suppress all output in quiet mode
+    print(*args, **kwargs)
 
 
 # ANSI color codes
