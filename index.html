@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini-Agent Capabilities Demo</title>
+    <style>
+        :root {
+            --electric-blue: #0066ff;
+            --neon-cyan: #00ffff;
+            --dark-gray: #1e1e1e;
+            --white: #ffffff;
+            --card-bg: #2a2a2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--dark-gray) 0%, #0a0a0a 100%);
+            color: var(--white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 102, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(5%, 5%) rotate(5deg); }
+            66% { transform: translate(-5%, 3%) rotate(-3deg); }
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--electric-blue), var(--neon-cyan));
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 102, 255, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--white), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        main {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .category {
+            margin-bottom: 50px;
+        }
+
+        .category-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--neon-cyan);
+            margin-bottom: 25px;
+            padding-left: 15px;
+            border-left: 4px solid var(--electric-blue);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--electric-blue), var(--neon-cyan));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 102, 255, 0.2);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.2), rgba(0, 255, 255, 0.2));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: var(--white);
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            background: rgba(0, 102, 255, 0.2);
+            color: var(--neon-cyan);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .skill-card {
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.1), rgba(0, 255, 255, 0.05));
+            border-radius: 14px;
+            padding: 25px;
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .skill-card:hover {
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.2), rgba(0, 255, 255, 0.1));
+            transform: translateX(5px);
+        }
+
+        .skill-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .skill-info h4 {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--white);
+        }
+
+        .skill-info p {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .project-scale {
+            background: linear-gradient(135deg, rgba(0, 102, 255, 0.05), rgba(0, 255, 255, 0.02));
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .project-scale-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .project-scale-header h2 {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--neon-cyan);
+            margin-bottom: 15px;
+        }
+
+        .project-scale-header p {
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .scale-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .scale-grid.wide {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .scale-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scale-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 15px 50px rgba(0, 102, 255, 0.2);
+        }
+
+        .scale-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .scale-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--electric-blue), var(--neon-cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .scale-card h3 {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--white);
+        }
+
+        .scale-card > p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .scale-features {
+            list-style: none;
+        }
+
+        .scale-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .scale-features li:last-child {
+            border-bottom: none;
+        }
+
+        .scale-features li::before {
+            content: '\2713';
+            color: var(--neon-cyan);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .example-box {
+            background: rgba(0, 102, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .example-box h4 {
+            font-size: 0.8rem;
+            color: var(--neon-cyan);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .example-box code {
+            display: block;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .demo-section {
+            background: rgba(0, 102, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .demo-section h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--neon-cyan);
+        }
+
+        footer {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .cards-grid, .scale-grid, .scale-grid.wide {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <header>
+        <div class="logo-icon">M</div>
+        <h1>Mini-Agent</h1>
+        <p class="subtitle">Your versatile AI coding assistant with powerful tools and specialized skills</p>
+    </header>
+
+    <main>
+        <!-- Core Capabilities -->
+        <section class="category">
+            <h2 class="category-title">
+                Core Capabilities
+            </h2>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">F</div>
+                    <h3>File Operations</h3>
+                    <p>Read, write, edit, and manage files with full path support. Create directories, handle errors gracefully, and work with any file type.</p>
+                    <div class="card-tags">
+                        <span class="tag">Read</span>
+                        <span class="tag">Write</span>
+                        <span class="tag">Edit</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">S</div>
+                    <h3>Shell Execution</h3>
+                    <p>Execute PowerShell commands directly. Run git, npm, docker, build tools, and any command-line operations seamlessly.</p>
+                    <div class="card-tags">
+                        <span class="tag">PowerShell</span>
+                        <span class="tag">CLI</span>
+                        <span class="tag">Automation</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">M</div>
+                    <h3>MCP Integration</h3>
+                    <p>Connect to external services through Model Context Protocol servers. Extend functionality with additional tools and APIs.</p>
+                    <div class="card-tags">
+                        <span class="tag">MCP</span>
+                        <span class="tag">APIs</span>
+                        <span class="tag">Extensions</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">T</div>
+                    <h3>Smart Task Execution</h3>
+                    <p>Analyze requests, break down complex tasks, use appropriate tools systematically, and report progress with clear solutions.</p>
+                    <div class="card-tags">
+                        <span class="tag">Planning</span>
+                        <span class="tag">Execution</span>
+                        <span class="tag">Reporting</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Specialized Skills -->
+        <section class="category">
+            <h2 class="category-title">
+                Specialized Skills
+            </h2>
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <div class="skill-icon">A</div>
+                    <div class="skill-info">
+                        <h4>Algorithmic Art</h4>
+                        <p>Create generative art using p5.js with seeded randomness and interactive flow fields</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">B</div>
+                    <div class="skill-info">
+                        <h4>Artifacts Builder</h4>
+                        <p>Build elaborate HTML artifacts using React, Tailwind CSS, and shadcn/ui components</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">C</div>
+                    <div class="skill-info">
+                        <h4>Canvas Design</h4>
+                        <p>Create beautiful visual art in PNG and PDF with professional design philosophy</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">D</div>
+                    <div class="skill-info">
+                        <h4>Document (docx)</h4>
+                        <p>Create and edit Word documents with tracked changes, comments, and formatting</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">P</div>
+                    <div class="skill-info">
+                        <h4>PDF Manipulation</h4>
+                        <p>Extract text/tables, create new PDFs, merge/split documents, and fill forms</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">X</div>
+                    <div class="skill-info">
+                        <h4>Presentations (pptx)</h4>
+                        <p>Create and edit PowerPoint presentations with layouts and speaker notes</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">S</div>
+                    <div class="skill-info">
+                        <h4>Spreadsheets (xlsx)</h4>
+                        <p>Build Excel files with formulas, formatting, data analysis, and visualizations</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">G</div>
+                    <div class="skill-info">
+                        <h4>Slack GIF Creator</h4>
+                        <p>Create animated GIFs optimized for Slack with size validators</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">W</div>
+                    <div class="skill-info">
+                        <h4>Webapp Testing</h4>
+                        <p>Test local web applications using Playwright for frontend verification</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">T</div>
+                    <div class="skill-info">
+                        <h4>Theme Factory</h4>
+                        <p>Style artifacts with 10+ professional themes for consistent visual identity</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">I</div>
+                    <div class="skill-info">
+                        <h4>Internal Comms</h4>
+                        <p>Write internal communications: status reports, newsletters, FAQs, incident reports</p>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">C</div>
+                    <div class="skill-info">
+                        <h4>MCP Builder</h4>
+                        <p>Create MCP servers to integrate external APIs and services</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Project-Scale Capabilities -->
+        <section class="project-scale">
+            <div class="project-scale-header">
+                <h2>Project-Scale Capabilities</h2>
+                <p>Full-stack development assistance for entire projects - from scaffolding to testing, deployment, and beyond</p>
+            </div>
+            
+            <div class="scale-grid wide">
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">1</div>
+                        <h3>API Testing</h3>
+                    </div>
+                    <p>Comprehensive API testing and validation for REST, GraphQL, and WebSocket endpoints.</p>
+                    <ul class="scale-features">
+                        <li>Functional testing with assertion frameworks</li>
+                        <li>Load and stress testing for performance</li>
+                        <li>Authentication flow testing (OAuth, JWT, API Keys)</li>
+                        <li>Contract testing and validation</li>
+                        <li>Automated regression test suites</li>
+                        <li>Request and response logging and debugging</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Test my /api/users endpoint with 100 concurrent requests and verify response time under 200ms</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">2</div>
+                        <h3>Frontend UI/UX Testing</h3>
+                    </div>
+                    <p>Automated browser testing using Playwright for comprehensive frontend validation.</p>
+                    <ul class="scale-features">
+                        <li>Functional testing across browsers</li>
+                        <li>Visual regression testing with screenshots</li>
+                        <li>Accessibility testing (WCAG compliance)</li>
+                        <li>Performance metrics collection</li>
+                        <li>Console error detection</li>
+                        <li>Responsive design testing</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Run Playwright tests on my login form, check for console errors, and verify all buttons work</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">3</div>
+                        <h3>UI/UX Design Suggestions</h3>
+                    </div>
+                    <p>Analyze your frontend and provide actionable design improvement recommendations.</p>
+                    <ul class="scale-features">
+                        <li>Color contrast analysis for accessibility</li>
+                        <li>Layout and spacing recommendations</li>
+                        <li>Typography and hierarchy suggestions</li>
+                        <li>UX pattern best practices</li>
+                        <li>Mobile-first design feedback</li>
+                        <li>Performance optimization tips</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Analyze my landing page and suggest improvements for accessibility and user experience</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">4</div>
+                        <h3>Code Review and Analysis</h3>
+                    </div>
+                    <p>Automated code quality analysis and detailed review for improvements.</p>
+                    <ul class="scale-features">
+                        <li>Code quality scoring and metrics</li>
+                        <li>Security vulnerability detection</li>
+                        <li>Best practices enforcement</li>
+                        <li>Complexity and debt analysis</li>
+                        <li>Performance anti-patterns</li>
+                        <li>Detailed fix recommendations</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Review my codebase for security issues and suggest improvements for code quality</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">5</div>
+                        <h3>Project Scaffolding</h3>
+                    </div>
+                    <p>Quick project setup with industry-standard structures and best practices.</p>
+                    <ul class="scale-features">
+                        <li>Full-stack project templates</li>
+                        <li>Language and framework initialization</li>
+                        <li>Development environment setup</li>
+                        <li>Testing framework configuration</li>
+                        <li>CI/CD pipeline templates</li>
+                        <li>Docker containerization</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Set up a new React plus Node.js project with TypeScript, Jest, and Docker configuration</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">6</div>
+                        <h3>Test Generation</h3>
+                    </div>
+                    <p>Automatically generate comprehensive test suites for your codebase.</p>
+                    <ul class="scale-features">
+                        <li>Unit tests for functions and classes</li>
+                        <li>Integration tests for APIs</li>
+                        <li>E2E test scenarios</li>
+                        <li>Fixture and mock setup</li>
+                        <li>Test coverage analysis</li>
+                        <li>Mock server configuration</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Generate unit tests for my auth module with 80% coverage</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">7</div>
+                        <h3>Documentation Generation</h3>
+                    </div>
+                    <p>Auto-generate comprehensive documentation from your codebase.</p>
+                    <ul class="scale-features">
+                        <li>API documentation from code</li>
+                        <li>README and setup guides</li>
+                        <li>Architecture decision records</li>
+                        <li>Component documentation</li>
+                        <li>Database schema docs</li>
+                        <li>Deployment guides</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Generate API documentation and README for my Express.js backend</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">8</div>
+                        <h3>Security Scanning</h3>
+                    </div>
+                    <p>Identify and fix security vulnerabilities in your applications.</p>
+                    <ul class="scale-features">
+                        <li>OWASP Top 10 detection</li>
+                        <li>Dependency vulnerability scanning</li>
+                        <li>Secret detection in code</li>
+                        <li>SQL injection testing</li>
+                        <li>XSS vulnerability checks</li>
+                        <li>Security hardening suggestions</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Scan my app for OWASP vulnerabilities and suggest fixes</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">9</div>
+                        <h3>Database Operations</h3>
+                    </div>
+                    <p>Database design, queries, migrations, and optimization assistance.</p>
+                    <ul class="scale-features">
+                        <li>Schema design and optimization</li>
+                        <li>Query writing and debugging</li>
+                        <li>Migration script generation</li>
+                        <li>Index and performance tuning</li>
+                        <li>Seed data creation</li>
+                        <li>ERD generation</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Create migration scripts for adding user roles and optimize slow queries</code>
+                    </div>
+                </div>
+
+                <div class="scale-card">
+                    <div class="scale-header">
+                        <div class="scale-icon">10</div>
+                        <h3>CI/CD and DevOps</h3>
+                    </div>
+                    <p>Build automation, deployment pipelines, and infrastructure scripts.</p>
+                    <ul class="scale-features">
+                        <li>GitHub Actions workflows</li>
+                        <li>Docker and Kubernetes configs</li>
+                        <li>Build script automation</li>
+                        <li>Environment configuration</li>
+                        <li>Deployment scripts</li>
+                        <li>Infrastructure as Code</li>
+                    </ul>
+                    <div class="example-box">
+                        <h4>Example Request</h4>
+                        <code>Set up CI/CD pipeline with automated testing and deployment to AWS</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow Demo -->
+        <section class="demo-section">
+            <h2>How I Work</h2>
+            <div class="cards-grid" style="text-align: left; margin-top: 30px;">
+                <div class="card">
+                    <div class="card-icon">1</div>
+                    <h3>Analyze</h3>
+                    <p>I understand your request and identify which skills/tools are needed</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">2</div>
+                    <h3>Plan</h3>
+                    <p>I break down complex tasks into clear, executable steps</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">3</div>
+                    <h3>Execute</h3>
+                    <p>I use the appropriate tools systematically and check results</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">4</div>
+                    <h3>Report</h3>
+                    <p>I summarize accomplishments and flag any issues with solutions</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Mini-Agent - Powered by MiniMax</p>
+        <p style="margin-top: 10px;">Ready to help with your next coding project!</p>
+    </footer>
+</body>
+</html>
